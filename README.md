@@ -1,1 +1,1 @@
-# ts-tree
+# ts-tree [![npm version](https://badge.fury.io/js/ts-tree.svg)](https://badge.fury.io/js/ts-tree) [![Build Status](https://travis-ci.org/mbovel/ts-tree.svg?branch=master)](https://travis-ci.org/mbovel/ts-tree)
