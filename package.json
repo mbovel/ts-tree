@@ -13,6 +13,29 @@
 		"prettier-check": "prettier-check src/* test/* *.json *.yml",
 		"prettier": "prettier --write src/* test/* *.json *.yml",
 		"tslint": "tslint --project tsconfig.json",
-		"mocha": "mocha --require ts-node/register test/*"
-	}
+		"mocha": "mocha --require ts-node/register test/*",
+		"build": "tsc"
+	},
+	"name": "ts-tree",
+	"description": "Simple generic tree structure",
+	"version": "0.1.1",
+	"main": "build/Tree.js",
+	"types": "build/Tree.d.ts",
+	"directories": {
+		"test": "test"
+	},
+	"dependencies": {},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/mbovel/ts-tree.git"
+	},
+	"keywords": [
+		"tree"
+	],
+	"author": "Matthieu Bovel <matthieu@bovel.net>",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/mbovel/ts-tree/issues"
+	},
+	"homepage": "https://github.com/mbovel/ts-tree#readme"
 }

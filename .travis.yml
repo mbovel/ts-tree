@@ -1,12 +1,22 @@
 language: node_js
 node_js:
-    - "node"
+    - node
 cache:
     directories:
-        - "node_modules"
+        - node_modules
 notifications:
     email: false
 script:
     - npm run prettier-check
     - npm run tslint
     - npm run mocha
+before_deploy:
+    - npm run build
+deploy:
+    provider: npm
+    email: matthieu.bovel@epfl.ch
+    api_key:
+        secure: v/24lDVUYQdONFdsusgCeiDrsgX6plRi93fDeRackZDLWo4vCefR+6+1NKNOOU1DjbjYNMeYzcVNZk+l0qU8wl/J4+51843taVQ4EKXoXUsEBEy9jFJvrHgZaNUCIiBfSH3EZ+GU5GTFmMLySl+JcQQyWwxHAcoWVSAUB/JuFmeJ2/vE3H3Lr6y5tQM80ijel1djB4MBrFKrRTTAn1Yw5xwPHoWa7sCQ+vJG4U8WMQXKe7pgrhxhCs834f18S1L19rylwcl8Lr8h5RHJh6zr7Wh1WkpYNsQZI1qEATgH0aUf71OKo2Iuuc/f3nCw+bugloPxs72jujs8+WqeQXaAoSyM8i6mzUMcKNEEtP3qvFjHbcqPNeudm0wwJocEbpGDsom2z3/5x/V9kjnb/8RXkKVMsM/ZpPyhCgkkI14J11yzXSpszxfdRMU9butx5y2kuPZ4/IZqorluVvciABozxw7W/P4snEvxt1QIEekWVCn4A3xFLJzULooW6TsB9c4wWiCmYbXvzeTLdpBfD19yfmiVXzCYWLuWaUPd1GqmkzGtOGPFpquxomjovNGugslN8EhI7jtdy16XUpOThzA9w1ln+LkmcNjoxVJ/ZPetalktXV3iWXz3+nwTZBEXrboWKCETJOB7b5F8acyDVOH//zn2n05NXpARQ7RW+T8jH+Q=
+    on:
+        tags: true
+        repo: mbovel/ts-tree
