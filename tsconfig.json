@@ -5,6 +5,9 @@
 		"removeComments": true,
 		"preserveConstEnums": true,
 		"sourceMap": true,
-		"strictNullChecks": true
-	}
+		"strictNullChecks": true,
+		"declaration": true,
+		"outDir": "./build"
+	},
+	"include": ["src"]
 }
