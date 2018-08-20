@@ -1,0 +1,11 @@
+{
+	"extends": "tslint:recommended",
+	"rules": {
+		"indent": [true, "tabs", 4],
+		"array-type": [true, "array"],
+		"variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore"],
+		"curly": [true, "ignore-same-line"],
+		"member-access": [true, "no-public"],
+		"arrow-parens": false
+	}
+}

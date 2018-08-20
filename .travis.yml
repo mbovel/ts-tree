@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+    - "node"
+cache:
+    directories:
+        - "node_modules"
+notifications:
+    email: false
+script:
+    - npm run prettier-check
+    - npm run tslint
+    - npm run mocha
