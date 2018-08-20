@@ -13,6 +13,7 @@ script:
 before_deploy:
     - npm run build
 deploy:
+    skip_cleanup: true
     provider: npm
     email: matthieu.bovel@epfl.ch
     api_key:
