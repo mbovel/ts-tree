@@ -1,8 +1,10 @@
 export class Tree<T> {
-	private _parent: Tree<T> | undefined;
+	private _parent?: Tree<T>;
+	private _children: Tree<T>[];
 
-	constructor(public value: T, private _children: Tree<T>[] = []) {
-		for (const child of _children) {
+	constructor(public value: T, children: Tree<T>[] = []) {
+		this._children = children;
+		for (const child of children) {
 			child.remove();
 			child._parent = this;
 		}
