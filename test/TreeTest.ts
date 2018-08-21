@@ -185,4 +185,23 @@ describe("Tree", () => {
 			assert.deepStrictEqual(trees[0].isBefore(trees[7]), 0);
 		});
 	});
+
+	describe("#isChildOf()", () => {
+		it("returns false if `this === that`", () => {
+			const trees = exampleTrees();
+			assert.strictEqual(trees[3].isChildOf(trees[3]), false);
+		});
+
+		it("returns false if `that` is not a parent of `this`", () => {
+			const trees = exampleTrees();
+			assert.strictEqual(trees[6].isChildOf(trees[5]), false);
+			assert.strictEqual(trees[1].isChildOf(trees[2]), false);
+		});
+
+		it("returns true if `that` is a parent of that", () => {
+			const trees = exampleTrees();
+			assert.strictEqual(trees[3].isChildOf(trees[1]), true);
+			assert.strictEqual(trees[2].isChildOf(trees[1]), true);
+		});
+	});
 });

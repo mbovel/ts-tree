@@ -112,6 +112,12 @@ export class Tree<T> {
 		return thisAncestors.length < thatAncestors.length ? -1 : 1;
 	}
 
+	isChildOf(that: Tree<T>): boolean {
+		if (this.parent === that) return true;
+		if (this.parent) return this.parent.isChildOf(that);
+		return false;
+	}
+
 	sortChildren(fn: (a: T, b: T) => number): void {
 		this._children.sort((a, b) => fn(a.value, b.value));
 	}
