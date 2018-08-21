@@ -10,11 +10,14 @@
 		"typescript": "^3.0.1"
 	},
 	"scripts": {
-		"prettier-check": "prettier-check src/* test/* *.json *.yml",
-		"prettier": "prettier --write src/* test/* *.json *.yml",
+		"prettier-check": "prettier-check src/* *.json *.yml",
+		"prettier": "prettier --write src/* *.json *.yml",
 		"tslint": "tslint --project tsconfig.json",
+		"tslint:fix": "tslint --project tsconfig.json --fix",
+		"build": "tsc",
 		"mocha": "mocha --require ts-node/register test/*",
-		"build": "tsc"
+		"preversion": "npm run prettier && npm run tslint:fix && npm run tslint",
+		"postversion": "git push && git push --tags"
 	},
 	"name": "ts-tree",
 	"description": "Simple generic tree structure",
