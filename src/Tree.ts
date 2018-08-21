@@ -1,3 +1,8 @@
+export interface JSONTree<T> {
+	value: T;
+	children: JSONTree<T>[];
+}
+
 export class Tree<T> {
 	private _parent?: Tree<T>;
 	private _children: Tree<T>[];
@@ -8,6 +13,17 @@ export class Tree<T> {
 			child.remove();
 			child._parent = this;
 		}
+	}
+
+	static fromJSON<T>(json: JSONTree<T>): Tree<T> {
+		return new Tree(json.value, json.children.map(Tree.fromJSON));
+	}
+
+	toJSON(): JSONTree<T> {
+		return {
+			value: this.value,
+			children: this._children.map(child => child.toJSON())
+		};
 	}
 
 	get children(): ReadonlyArray<Tree<T>> {

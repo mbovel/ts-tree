@@ -32,6 +32,14 @@ describe("Tree", () => {
 		});
 	});
 
+	describe(".fromJSON, #toJSON", () => {
+		it("are equivalent to .clone()", () => {
+			for (const tree of exampleTrees()) {
+				assert.deepStrictEqual(Tree.fromJSON(tree.toJSON()), tree.clone());
+			}
+		});
+	});
+
 	describe("#root", () => {
 		it("returns itself if it is the root", () => {
 			const trees = exampleTrees();
