@@ -1,6 +1,6 @@
 export interface JSONTree<T> {
 	value: T;
-	children: JSONTree<T>[];
+	children?: JSONTree<T>[];
 }
 
 export class Tree<T> {
@@ -16,14 +16,17 @@ export class Tree<T> {
 	}
 
 	static fromJSON<T>(json: JSONTree<T>): Tree<T> {
-		return new Tree(json.value, json.children.map(Tree.fromJSON));
+		return new Tree(json.value, (json.children || []).map(Tree.fromJSON));
 	}
 
 	toJSON(): JSONTree<T> {
-		return {
-			value: this.value,
-			children: this._children.map(child => child.toJSON())
-		};
+		if (this._children.length > 0) {
+			return {
+				value: this.value,
+				children: this._children.map(child => child.toJSON())
+			};
+		}
+		return { value: this.value };
 	}
 
 	get children(): ReadonlyArray<Tree<T>> {

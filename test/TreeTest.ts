@@ -40,6 +40,14 @@ describe("Tree", () => {
 		});
 	});
 
+	describe('#toJSON', () => {
+		it('does not produce a `children` field for leaves', () => {
+			const trees = exampleTrees();
+			const leaf = trees[9].toJSON();
+			assert.strictEqual(leaf.children, undefined);
+		});
+	});
+
 	describe("#root", () => {
 		it("returns itself if it is the root", () => {
 			const trees = exampleTrees();
