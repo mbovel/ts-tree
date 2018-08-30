@@ -10,8 +10,7 @@ export class Tree<T> {
 	constructor(public value: T, children: Tree<T>[] = []) {
 		this._children = children;
 		for (const child of children) {
-			child.remove();
-			child._parent = this;
+			child.reparent(this);
 		}
 	}
 
@@ -88,8 +87,10 @@ export class Tree<T> {
 		if (this._parent) return this._parent.removeChild(this);
 	}
 
-	appendChild(newTree: Tree<T>): Tree<T> | undefined {
-		return this.insertBefore(undefined, newTree);
+	appendChild(newTree: Tree<T>): Tree<T> {
+		newTree.reparent(this);
+		this._children.push(newTree);
+		return newTree;
 	}
 
 	insertAfter(reference: Tree<T> | undefined, newTree: Tree<T>): Tree<T> | undefined {
@@ -97,11 +98,11 @@ export class Tree<T> {
 	}
 
 	insertBefore(reference: Tree<T> | undefined, newTree: Tree<T>): Tree<T> | undefined {
-		const index = reference ? this._children.indexOf(reference) : this._children.length;
+		if (!reference) return this.appendChild(newTree);
+		const index = this._children.indexOf(reference);
 		if (index >= 0) {
-			newTree.remove();
+			newTree.reparent(this);
 			this._children.splice(index, 0, newTree);
-			newTree._parent = this;
 			return newTree;
 		}
 	}
@@ -180,5 +181,10 @@ export class Tree<T> {
 			yield* this._parent.ancestors();
 			yield this._parent;
 		}
+	}
+
+	private reparent(newParent: Tree<T>) {
+		this.remove();
+		this._parent = newParent;
 	}
 }
