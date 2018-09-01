@@ -21,7 +21,7 @@
 	},
 	"name": "ts-tree",
 	"description": "Simple generic tree structure",
-	"version": "0.1.7",
+	"version": "0.1.8",
 	"main": "build/Tree.js",
 	"types": "build/Tree.d.ts",
 	"directories": {
