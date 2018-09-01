@@ -93,6 +93,12 @@ export class Tree<T> {
 		return newTree;
 	}
 
+	push(...newTrees: Tree<T>[]): number {
+		newTrees.forEach((tree: Tree<T>) => tree.reparent(this));
+		this._children.push(...newTrees);
+		return this._children.length;
+	}
+
 	insertAfter(reference: Tree<T> | undefined, newTree: Tree<T>): Tree<T> | undefined {
 		return this.insertBefore(reference ? reference.nextSibling : this.firstChild, newTree);
 	}
