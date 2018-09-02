@@ -1,22 +1,8 @@
 import * as assert from "assert";
 import { Tree } from "../src/Tree";
+import { exampleTrees } from "./utils";
 
 describe("Tree", () => {
-	function exampleTrees(): Tree<number>[] {
-		const trees: Tree<number>[] = Array(10);
-		trees[9] = new Tree(9);
-		trees[8] = new Tree(8);
-		trees[7] = new Tree(7, [trees[8], trees[9]]);
-		trees[6] = new Tree(6);
-		trees[5] = new Tree(5);
-		trees[4] = new Tree(4);
-		trees[3] = new Tree(3, [trees[4]]);
-		trees[2] = new Tree(2, [trees[3]]);
-		trees[1] = new Tree(1, [trees[2]]);
-		trees[0] = new Tree(0, [trees[1], trees[5], trees[6]]);
-		return trees;
-	}
-
 	describe("constructor", () => {
 		it("correctly set parents", () => {
 			const trees = exampleTrees();
@@ -40,8 +26,8 @@ describe("Tree", () => {
 		});
 	});
 
-	describe('#toJSON', () => {
-		it('does not produce a `children` field for leaves', () => {
+	describe("#toJSON", () => {
+		it("does not produce a `children` field for leaves", () => {
 			const trees = exampleTrees();
 			const leaf = trees[9].toJSON();
 			assert.strictEqual(leaf.children, undefined);
