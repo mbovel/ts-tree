@@ -2,51 +2,25 @@ import * as assert from "assert";
 import { Tree } from "../src/Tree";
 
 describe("Tree", () => {
-	function exampleTrees(): Tree<number>[] {
-		const trees: Tree<number>[] = Array(10);
-		trees[9] = new Tree(9);
-		trees[8] = new Tree(8);
-		trees[7] = new Tree(7, [trees[8], trees[9]]);
-		trees[6] = new Tree(6);
-		trees[5] = new Tree(5);
-		trees[4] = new Tree(4);
-		trees[3] = new Tree(3, [trees[4]]);
-		trees[2] = new Tree(2, [trees[3]]);
-		trees[1] = new Tree(1, [trees[2]]);
-		trees[0] = new Tree(0, [trees[1], trees[5], trees[6]]);
+	function exampleTrees(): Tree[] {
+		const trees: Tree[] = Array(10);
+		trees[9] = new Tree();
+		trees[8] = new Tree();
+		trees[7] = new Tree();
+		trees[7].push(trees[8], trees[9]);
+		trees[6] = new Tree();
+		trees[5] = new Tree();
+		trees[4] = new Tree();
+		trees[3] = new Tree();
+		trees[3].push(trees[4]);
+		trees[2] = new Tree();
+		trees[2].push(trees[3]);
+		trees[1] = new Tree();
+		trees[1].push(trees[2]);
+		trees[0] = new Tree();
+		trees[0].push(trees[1], trees[5], trees[6]);
 		return trees;
 	}
-
-	describe("constructor", () => {
-		it("correctly set parents", () => {
-			const trees = exampleTrees();
-			assert.strictEqual(trees[0].children.length, 3);
-			assert.strictEqual(trees[1].parent, trees[0]);
-			assert.strictEqual(trees[4].parent, trees[3]);
-		});
-
-		it("removes each element from `_children` from its previous parent", () => {
-			const trees = exampleTrees();
-			assert.doesNotThrow(() => new Tree(10, [trees[1]]));
-			assert.strictEqual(trees[0].children.length, 2);
-		});
-	});
-
-	describe(".fromJSON, #toJSON", () => {
-		it("are equivalent to .clone()", () => {
-			for (const tree of exampleTrees()) {
-				assert.deepStrictEqual(Tree.fromJSON(tree.toJSON()), tree.clone());
-			}
-		});
-	});
-
-	describe('#toJSON', () => {
-		it('does not produce a `children` field for leaves', () => {
-			const trees = exampleTrees();
-			const leaf = trees[9].toJSON();
-			assert.strictEqual(leaf.children, undefined);
-		});
-	});
 
 	describe("#root", () => {
 		it("returns itself if it is the root", () => {
