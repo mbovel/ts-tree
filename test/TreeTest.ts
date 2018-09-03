@@ -140,6 +140,18 @@ describe("Tree", () => {
 			assert.strictEqual(trees[1].firstChild, trees[2]);
 			assert.strictEqual(trees[1].lastChild, trees[8]);
 		});
+
+		it("can move trees back and forth", () => {
+			const example = exampleTrees();
+			const root = example[0];
+			const original = root.clone();
+			const node = example[5];
+
+			root.insertAfter(undefined, node);
+			root.insertAfter(example[1], node);
+
+			assert.deepStrictEqual(root, original);
+		});
 	});
 
 	describe("#removeChild", () => {
