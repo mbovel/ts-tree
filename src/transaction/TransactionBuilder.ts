@@ -1,7 +1,7 @@
 import { Tree } from "../Tree";
 import { DeltaCalculator } from "./DeltaCalculator";
 import { Operation, Transaction } from "./Transaction";
-import { Indexer } from "./Indexer";
+import { Bijection } from "./Bijection";
 
 type StagedChange<Value, Delta> = Readonly<{
 	type: 'insert',
@@ -27,17 +27,24 @@ export class TransactionBuilder<Id, Value, Delta> {
 
 	constructor(
 		private readonly deltaCalculator: DeltaCalculator<Value, Delta>,
-		private readonly indexer: Indexer<Value, Id>
-	) {}
+		private readonly bijection: Bijection<Tree<Value>, Id> = new Bijection(),
+		private readonly generateId: () => Id
+	) {
+		if (this.bijection.size === 0) {
+			throw Error('Bijection should not be empty; it must at least contain root');
+		}
+	}
 
 	insert(parent: Tree<Value>, previousSibling: Tree<Value> | undefined, value: Value): void {
 		if (parent === previousSibling) {
 			throw Error('Parent and previousSibling must be distinct');
 		}
+		// TODO recursively push children
 		this.staged.push({ type: "insert", parent, previousSibling, value });
 	}
 
 	remove(tree: Tree<Value>): void {
+		// TODO recursively push children
 		this.staged.push({ type: "remove", tree });
 	}
 
@@ -59,39 +66,56 @@ export class TransactionBuilder<Id, Value, Delta> {
 	}
 
 	private convert(op: StagedChange<Value, Delta>): Operation<Id, Value, Delta> {
-		const optionalId = (tree: Tree<Value> | undefined): Id | undefined => tree ? this.indexer.index(tree) : undefined;
+		const getId = (tree: Tree<Value>): Id => {
+			const id = this.bijection.aToB.get(tree);
+			if (!id) throw Error('Could not find tree');
+			return id;
+		};
+
+		const positionalIds = (parent: Tree<Value>, previousSibling: Tree<Value> | undefined): [Id, Id?] => {
+			return [getId(parent), previousSibling ? getId(previousSibling) : undefined];
+		};
+
 		switch (op.type) {
-			case "insert":
+			case "insert": {
+				const tree = new Tree(op.value);
+				const id = this.generateId();
+				this.bijection.set(tree, id);
+				const [parent, previousSibling] = positionalIds(op.parent, op.previousSibling);
 				return {
 					type: 'insert',
-					tree: this.indexer.index(new Tree(op.value)),
-					parent: this.indexer.index(op.parent),
-					previousSibling: optionalId(op.previousSibling)
+					tree: id,
+					parent,
+					previousSibling
 				};
+			}
 			case "remove": {
 				if (!op.tree.parent) throw Error("Cannot remove root");
+				const [parent, previousSibling] = positionalIds(op.tree.parent, op.tree.previousSibling);
 				return {
 					type: 'remove',
-					tree: this.indexer.index(op.tree),
-					parent: this.indexer.index(op.tree.parent),
-					previousSibling: optionalId(op.tree.previousSibling)
+					tree: getId(op.tree),
+					parent,
+					previousSibling
 				};
 			}
 			case "move": {
 				if (!op.tree.parent) throw Error("Cannot move root");
+				const [parent, previousSibling] = positionalIds(op.tree.parent, op.tree.previousSibling);
+				const [newParent, newPreviousSibling] = positionalIds(op.newParent, op.newPreviousSibling);
 				return {
 					type: 'move',
-					tree: this.indexer.index(op.tree),
-					parent: this.indexer.index(op.tree.parent),
-					previousSibling: optionalId(op.tree.previousSibling),
-					newParent: this.indexer.index(op.newParent),
-					newPreviousSibling: optionalId(op.newPreviousSibling)
+					tree: getId(op.tree),
+					parent,
+					previousSibling,
+					newParent,
+					newPreviousSibling,
 				};
 			}
 			case "change_value":
 				return {
 					type: "change_value",
-					tree: this.indexer.index(op.tree),
+					tree: getId(op.tree),
 					delta: this.deltaCalculator.diff(op.tree.value, op.newValue)
 				};
 		}

@@ -1,37 +1,44 @@
 import { DeltaCalculator } from "./DeltaCalculator";
 import { Operation, Transaction } from "./Transaction";
-import { Indexer } from "./Indexer";
 import { Tree } from "../Tree";
+import { Bijection } from "./Bijection";
 
 export class TransactionPatcher<Id, Value, Delta> {
 	constructor(
 		private readonly deltaCalculator: DeltaCalculator<Value, Delta>,
-		private readonly indexer: Indexer<Value, Id>
+		private readonly bijection: Bijection<Tree<Value>, Id>
 	) {}
 
 	apply(transaction: Transaction<Id, Value, Delta>): void {
-		const optionalTree = (id: Id | undefined): Tree<Value> | undefined => id ? this.indexer.deindex(id) : undefined;
+		const getTree = (id: Id): Tree<Value> => {
+			const tree = this.bijection.bToA.get(id);
+			if (!tree) throw Error('Tree not found in bijection');
+			return tree;
+		};
+
+		const positionalTrees = (parent: Id, previousSibling: Id | undefined): [Tree<Value>, Tree<Value>?] => {
+			return [getTree(parent), previousSibling ? getTree(previousSibling) : undefined];
+		};
+
 		for (const op of transaction) {
 			switch (op.type) {
 				case 'insert': {
-					const parent = this.indexer.deindex(op.parent);
-					const previousSibling = optionalTree(op.previousSibling);
-					const tree = this.indexer.deindex(op.tree);
+					const [parent, previousSibling] = positionalTrees(op.parent, op.previousSibling);
+					const tree = getTree(op.tree);
 					parent.insertAfter(previousSibling, tree);
 					break;
 				}
 				case 'move': {
-					const tree = this.indexer.deindex(op.tree);
-					const newParent = this.indexer.deindex(op.newParent);
-					const newPreviousSibling = optionalTree(op.newPreviousSibling);
+					const tree = getTree(op.tree);
+					const [newParent, newPreviousSibling] = positionalTrees(op.newParent, op.newPreviousSibling);
 					newParent.insertAfter(newPreviousSibling, tree);
 					break;
 				}
 				case 'remove': {
-					const parent = this.indexer.deindex(op.parent);
-					const tree = this.indexer.deindex(op.tree);
+					const parent = getTree(op.parent);
+					const tree = getTree(op.tree);
 					if (op.previousSibling) {
-						const previousSibling = this.indexer.deindex(op.previousSibling);
+						const previousSibling = getTree(op.previousSibling);
 						const node = previousSibling.nextSibling;
 						if (node && node.value === tree.value) {
 							node.remove();
@@ -49,10 +56,11 @@ export class TransactionPatcher<Id, Value, Delta> {
 					}
 					throw Error('Inconsistent transaction: cannot remove nonexistent node');
 				}
-				case 'change_value':
-					const node = this.indexer.deindex(op.tree);
-					node.value = this.deltaCalculator.patch(node.value, op.delta);
+				case 'change_value': {
+					const tree = getTree(op.tree);
+					tree.value = this.deltaCalculator.patch(tree.value, op.delta);
 					break;
+				}
 			}
 		}
 	}
