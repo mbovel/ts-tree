@@ -86,11 +86,11 @@ describe("Transaction", () => {
 		it("is reusable", () => {
 			// Transaction containing insert:
 			builder.insert(example1Root, undefined, 2);
-			patcher.apply(builder.commit());
+			patcher.apply(builder.build());
 			const firstResult = example1Root.clone();
 
 			// Empty transaction:
-			patcher.apply(builder.commit());
+			patcher.apply(builder.build());
 
 			// Make sure empty transaction didn't do anything:
 			assert.deepStrictEqual(example1Root, firstResult);
@@ -109,7 +109,7 @@ describe("Transaction", () => {
 			it("recursively inserts tree children, storing them in bijection", () => {
 				const tree = new Tree(1, [new Tree(2)]);
 				builder.insert(root, undefined, tree);
-				const transaction = builder.commit();
+				const transaction = builder.build();
 				patcher.apply(transaction);
 
 				// We need an insert for the parent and the child, so more than 1 operation:
@@ -203,7 +203,7 @@ describe("Transaction", () => {
 					builder.insert(tree, undefined, randomInt());
 				}
 
-				const transaction = builder.commit();
+				const transaction = builder.build();
 				transactions.push(transaction);
 				patcher.apply(transaction);
 			}
@@ -228,11 +228,11 @@ describe("Transaction", () => {
 			const original = root.clone();
 
 			builder.insert(root, children[1], 3);
-			const transaction1 = builder.commit();
+			const transaction1 = builder.build();
 			patcher.apply(transaction1);
 
 			builder.remove(children[1]);
-			const transaction2 = builder.commit();
+			const transaction2 = builder.build();
 			patcher.apply(transaction2);
 
 			patcher.unapply(transaction2);
@@ -246,12 +246,12 @@ describe("Transaction", () => {
 
 			// Insert "4" at the end:
 			builder.insert(root, root.lastChild, 14);
-			const transaction1 = builder.commit();
+			const transaction1 = builder.build();
 			patcher.apply(transaction1);
 
 			// Move "3" to start:
 			builder.move(root.children[2], root, undefined);
-			const transaction2 = builder.commit();
+			const transaction2 = builder.build();
 			patcher.apply(transaction2);
 
 			// Unapply both:

@@ -75,7 +75,7 @@ export class TransactionBuilder<Id, Value, Delta> {
 		this.staged.push({ type: "change_value", tree, newValue });
 	}
 
-	commit(): Transaction<Id, Value, Delta> {
+	build(): Transaction<Id, Value, Delta> {
 		const transaction = this.staged.map(change => this.convert(change));
 		this.staged = [];
 		return transaction;
