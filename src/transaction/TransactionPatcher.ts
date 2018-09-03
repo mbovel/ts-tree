@@ -6,7 +6,8 @@ import { Operation, Transaction } from "./Transaction";
 export class TransactionPatcher<Id, Value, Delta> {
 	constructor(
 		private readonly deltaCalculator: DeltaCalculator<Value, Delta>,
-		private readonly bijection: Bijection<Tree<Value>, Id>
+		private readonly bijection: Bijection<Tree<Value>, Id>,
+		private readonly generateId: () => Id
 	) {}
 
 	apply(transaction: Transaction<Id, Value, Delta>): void {
@@ -30,7 +31,9 @@ export class TransactionPatcher<Id, Value, Delta> {
 						op.parent,
 						op.previousSibling
 					);
-					const tree = getTree(op.tree);
+					const tree = new Tree(op.value);
+					const id = op.restoreWithId || this.generateId();
+					this.bijection.set(tree, id);
 					parent.insertAfter(previousSibling, tree);
 					break;
 				}
@@ -45,35 +48,25 @@ export class TransactionPatcher<Id, Value, Delta> {
 				}
 				case "remove": {
 					const parent = getTree(op.parent);
-					const tree = getTree(op.tree);
-					if (op.previousSibling) {
-						const previousSibling = getTree(op.previousSibling);
-						const node = previousSibling.nextSibling;
-						if (node && node.value === tree.value) {
-							node.remove();
-							break;
-						} else if (!node) {
-							throw Error(
-								"Inconsistent transaction: cannot remove node because there are no nodes after previousSibling"
-							);
-						}
+					const node = op.previousSibling
+						? getTree(op.previousSibling).nextSibling
+						: parent.firstChild;
+					if (node && node.value === op.value) {
+						node.remove();
+						op.restoreWithId = this.bijection.aToB.get(node) || this.generateId();
+						this.bijection.deleteA(node);
+					} else if (!node) {
+						throw Error(
+							"Inconsistent transaction: cannot remove node because node doesn't exist"
+						);
+					} else {
 						throw Error(
 							`Inconsistent transaction: cannot remove node because it does not have the expected value (expected ${
-								tree.value
+								op.value
 							}, has ${node.value})`
 						);
-					} else if (parent.firstChild) {
-						if (parent.firstChild.value === tree.value) {
-							parent.firstChild.remove();
-							break;
-						}
-						throw Error(
-							`Inconsistent transaction: cannot remove node because it does not have expected value (expected ${
-								tree.value
-							}, has ${parent.firstChild.value})`
-						);
 					}
-					throw Error("Inconsistent transaction: cannot remove nonexistent node");
+					break;
 				}
 				case "change_value": {
 					const tree = getTree(op.tree);

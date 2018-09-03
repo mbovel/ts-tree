@@ -30,7 +30,8 @@ describe("Transaction", () => {
 		}
 	}
 
-	let exampleRoot: Tree<number>,
+	let example1Root: Tree<number>,
+		example2Root: Tree<number>,
 		root: Tree<number>,
 		children: [Tree<number>, Tree<number>, Tree<number>],
 		builder: TransactionBuilder<string, number, number>,
@@ -38,16 +39,20 @@ describe("Transaction", () => {
 
 	beforeEach("reset", () => {
 		bijection.clear();
+		const examples = exampleTrees();
 
-		exampleRoot = exampleTrees()[0];
-		register(exampleRoot);
+		example1Root = examples[0];
+		register(example1Root);
+
+		example2Root = examples[7];
+		register(example2Root);
 
 		children = [new Tree(11), new Tree(12), new Tree(13)];
 		root = new Tree(10, children);
 		register(root);
 
-		builder = new TransactionBuilder(delta, bijection, uid);
-		patcher = new TransactionPatcher(delta, bijection);
+		builder = new TransactionBuilder(delta, bijection);
+		patcher = new TransactionPatcher(delta, bijection, uid);
 	});
 
 	// These tests are just to verify that the constraints are indeed being respected.
@@ -80,26 +85,48 @@ describe("Transaction", () => {
 	describe("TransactionBuilder", () => {
 		it("is reusable", () => {
 			// Transaction containing insert:
-			builder.insert(exampleRoot, undefined, 2);
+			builder.insert(example1Root, undefined, 2);
 			patcher.apply(builder.commit());
-			const firstResult = exampleRoot.clone();
+			const firstResult = example1Root.clone();
 
 			// Empty transaction:
 			patcher.apply(builder.commit());
 
 			// Make sure empty transaction didn't do anything:
-			assert.deepStrictEqual(exampleRoot, firstResult);
+			assert.deepStrictEqual(example1Root, firstResult);
 		});
 
 		describe("constructor", () => {
 			it("throws an error when called with empty bijection", () => {
 				assert.throws(() => {
-					new TransactionBuilder(delta, new Bijection(), uid);
+					new TransactionBuilder(delta, new Bijection());
 				});
 			});
 		});
 
 		describe("#insert", () => {
+			/*
+			it("recursively inserts tree children, storing them in bijection", () => {
+				const tree = new Tree(1, [new Tree(2)]);
+				builder.insert(root, undefined, tree);
+				const transaction = builder.commit();
+				patcher.apply(transaction);
+
+				// We need an insert for the parent and the child, so more than 1 operation:
+				assert(transaction.length > 1);
+
+				if (!root.firstChild) throw Error("Root has no first child");
+				if (!root.firstChild.firstChild) throw Error("First child has no first child");
+
+				// This will throw an error if tree2 isn't in the bijection,
+				// i.e. if the whole tree has been added at once instead of node-by-node.
+				const tree2 = root.firstChild.firstChild;
+				assert.doesNotThrow(() => {
+					builder.insert(tree2, undefined, 3);
+				});
+			});
+			*/
+
 			it("throws an error when inserting both after and under same node", () => {
 				const tree = new Tree(1);
 				register(tree);
@@ -188,13 +215,13 @@ describe("Transaction", () => {
 		// potential problems that were found during initial development.
 		it("can apply and unapply many randomly generated transactions", () => {
 			const nOps = 5000;
-			const original = exampleRoot.clone();
-			const transactions = applyRandom(exampleRoot, nOps);
+			const original = example2Root.clone();
+			const transactions = applyRandom(example2Root, nOps);
 			transactions
 				.slice()
 				.reverse()
 				.forEach(transaction => patcher.unapply(transaction));
-			assert.deepStrictEqual(exampleRoot, original);
+			assert.deepStrictEqual(example2Root, original);
 		});
 
 		it("can apply and unapply simple insert and remove", () => {

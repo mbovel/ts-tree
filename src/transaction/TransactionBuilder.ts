@@ -32,8 +32,7 @@ export class TransactionBuilder<Id, Value, Delta> {
 
 	constructor(
 		private readonly deltaCalculator: DeltaCalculator<Value, Delta>,
-		private readonly bijection: Bijection<Tree<Value>, Id> = new Bijection(),
-		private readonly generateId: () => Id
+		private readonly bijection: Bijection<Tree<Value>, Id> = new Bijection()
 	) {
 		if (this.bijection.size === 0) {
 			throw Error("Bijection should not be empty; it must at least contain root");
@@ -50,7 +49,6 @@ export class TransactionBuilder<Id, Value, Delta> {
 			throw Error("Parent and previousSibling must be in the bijection");
 		}
 
-		// TODO recursively push children
 		this.staged.push({ type: "insert", parent, previousSibling, value });
 	}
 
@@ -59,7 +57,6 @@ export class TransactionBuilder<Id, Value, Delta> {
 			throw Error("Tree must be in bijection");
 		}
 
-		// TODO recursively push children
 		this.staged.push({ type: "remove", tree });
 	}
 
@@ -100,13 +97,9 @@ export class TransactionBuilder<Id, Value, Delta> {
 
 		switch (op.type) {
 			case "insert": {
-				const tree = new Tree(op.value);
-				const id = this.generateId();
-				this.bijection.set(tree, id);
 				const [parent, previousSibling] = positionalIds(op.parent, op.previousSibling);
 				return {
 					type: "insert",
-					tree: id,
 					value: op.value,
 					parent,
 					previousSibling
@@ -120,7 +113,6 @@ export class TransactionBuilder<Id, Value, Delta> {
 				);
 				return {
 					type: "remove",
-					tree: getId(op.tree),
 					value: op.tree.value,
 					parent,
 					previousSibling
