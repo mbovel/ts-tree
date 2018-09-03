@@ -13,12 +13,12 @@ export class Bijection<A, B> {
 
 	deleteA(a: A): boolean {
 		const b = this._aToB.get(a);
-		return (b ? this.delete(a, b) : false);
+		return b ? this.delete(a, b) : false;
 	}
 
 	deleteB(b: B): boolean {
 		const a = this._bToA.get(b);
-		return (a ? this.delete(a, b) : false);
+		return a ? this.delete(a, b) : false;
 	}
 
 	clear(): void {

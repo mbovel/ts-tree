@@ -10,8 +10,8 @@
 		"typescript": "^3.0.1"
 	},
 	"scripts": {
-		"prettier-check": "prettier-check src/* test/* *.json *.yml",
-		"prettier": "prettier --write src/* test/* *.json *.yml",
+		"prettier-check": "prettier-check src/**/* test/**/* *.json *.yml",
+		"prettier": "prettier --write src/**/* test/**/* *.json *.yml",
 		"tslint": "tslint --project tsconfig.json",
 		"tslint:fix": "tslint --project tsconfig.json --fix",
 		"build": "tsc",
