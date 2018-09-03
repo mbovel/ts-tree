@@ -85,6 +85,7 @@ export class TransactionBuilder<Id, Value, Delta> {
 				return {
 					type: 'insert',
 					tree: id,
+					value: op.value,
 					parent,
 					previousSibling
 				};
@@ -95,6 +96,7 @@ export class TransactionBuilder<Id, Value, Delta> {
 				return {
 					type: 'remove',
 					tree: getId(op.tree),
+					value: op.tree.value,
 					parent,
 					previousSibling
 				};

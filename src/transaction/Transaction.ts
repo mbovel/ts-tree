@@ -2,6 +2,7 @@ export type Operation<Id, Value, Delta> = Readonly<
 	| {
 			type: "insert" | "remove";
 			tree: Id;
+			value: Value;
 			parent: Id;
 			previousSibling?: Id;
 	  }
