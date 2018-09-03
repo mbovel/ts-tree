@@ -113,7 +113,7 @@ describe("Transaction", () => {
 				assert.throws(() => {
 					builder.insert(new Tree(1), undefined, 2);
 				});
-			})
+			});
 		});
 
 		describe("#remove", () => {
@@ -130,7 +130,7 @@ describe("Transaction", () => {
 				register(tree1);
 
 				assert.throws(() => {
-					builder.move(tree1, tree1, undefined)
+					builder.move(tree1, tree1, undefined);
 				});
 			});
 
