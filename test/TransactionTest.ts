@@ -91,18 +91,69 @@ describe("Transaction", () => {
 			assert.deepStrictEqual(exampleRoot, firstResult);
 		});
 
-		describe("#insert", () => {
-			it("throws an error when inserting both after and under same node", () => {
-				const tree = new Tree(1);
+		describe("constructor", () => {
+			it("throws an error when called with empty bijection", () => {
 				assert.throws(() => {
-					builder.insert(tree, tree, 1);
+					new TransactionBuilder(delta, new Bijection(), uid);
 				});
 			});
 		});
 
+		describe("#insert", () => {
+			it("throws an error when inserting both after and under same node", () => {
+				const tree = new Tree(1);
+				register(tree);
+
+				assert.throws(() => {
+					builder.insert(tree, tree, 1);
+				});
+			});
+
+			it("throws an error when inserting tree that isn't in the bijection", () => {
+				assert.throws(() => {
+					builder.insert(new Tree(1), undefined, 2);
+				});
+			})
+		});
+
 		describe("#remove", () => {
-			it("throws an error when removing", () => {
-				// TODO
+			it("throws an error when removing tree that isn't in the bijection", () => {
+				assert.throws(() => {
+					builder.remove(new Tree(1));
+				});
+			});
+		});
+
+		describe("#move", () => {
+			it("throws an error when moving into itself", () => {
+				const tree1 = new Tree(1);
+				register(tree1);
+
+				assert.throws(() => {
+					builder.move(tree1, tree1, undefined)
+				});
+			});
+
+			it("throws an error when moving after itself", () => {
+				const tree1 = new Tree(1);
+				register(tree1);
+				const tree2 = new Tree(2);
+				register(tree2);
+
+				assert.throws(() => {
+					builder.move(tree1, tree2, tree1);
+				});
+			});
+
+			it("throws an error when moving after and under the same tree", () => {
+				const tree1 = new Tree(1);
+				register(tree1);
+				const tree2 = new Tree(2);
+				register(tree2);
+
+				assert.throws(() => {
+					builder.move(tree1, tree2, tree2);
+				});
 			});
 		});
 	});
@@ -136,8 +187,9 @@ describe("Transaction", () => {
 		// The tests below are more minimal test cases meant to target specific
 		// potential problems that were found during initial development.
 		it("can apply and unapply many randomly generated transactions", () => {
+			const nOps = 5000;
 			const original = exampleRoot.clone();
-			const transactions = applyRandom(exampleRoot, 1000);
+			const transactions = applyRandom(exampleRoot, nOps);
 			transactions
 				.slice()
 				.reverse()
