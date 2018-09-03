@@ -38,12 +38,19 @@ export class TransactionBuilder<Id, Value, Delta> {
 	insert(parent: Tree<Value>, previousSibling: Tree<Value> | undefined, value: Value): void {
 		if (parent === previousSibling) {
 			throw Error('Parent and previousSibling must be distinct');
+		} else if (!this.bijection.aToB.has(parent) || (previousSibling && !this.bijection.aToB.has(previousSibling))) {
+			throw Error('Parent and previousSibling must be in the bijection');
 		}
+
 		// TODO recursively push children
 		this.staged.push({ type: "insert", parent, previousSibling, value });
 	}
 
 	remove(tree: Tree<Value>): void {
+		if (!this.bijection.aToB.has(tree)) {
+			throw Error('Tree must be in bijection');
+		}
+
 		// TODO recursively push children
 		this.staged.push({ type: "remove", tree });
 	}

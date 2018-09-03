@@ -24,18 +24,31 @@ const delta: DeltaCalculator<number, number> = {
 describe("Transaction", () => {
 	const bijection = new Bijection<Tree<number>, string>();
 
-	let root: Tree<number>,
+	function register(tree: Tree<number>) {
+		for (const node of [tree, ...tree.descendants()]) {
+			bijection.set(node, uid());
+		}
+	}
+
+	let exampleRoot: Tree<number>,
+		root: Tree<number>,
+		children: [Tree<number>, Tree<number>, Tree<number>],
 		builder: TransactionBuilder<string, number, number>,
 		patcher: TransactionPatcher<string, number, number>;
 
-	beforeEach('reset', () => {
+	beforeEach("reset", () => {
 		bijection.clear();
-		root = exampleTrees()[0];
-		bijection.set(root, uid());
+
+		exampleRoot = exampleTrees()[0];
+		register(exampleRoot);
+
+		children = [new Tree(11), new Tree(12), new Tree(13)];
+		root = new Tree(10, children);
+		register(root);
+
 		builder = new TransactionBuilder(delta, bijection, uid);
 		patcher = new TransactionPatcher(delta, bijection);
 	});
-
 
 	// These tests are just to verify that the constraints are indeed being respected.
 	describe("DeltaCalculator", () => {
@@ -67,14 +80,15 @@ describe("Transaction", () => {
 	describe("TransactionBuilder", () => {
 		it("is reusable", () => {
 			// Transaction containing insert:
-			builder.insert(root, undefined, 2);
+			builder.insert(exampleRoot, undefined, 2);
 			patcher.apply(builder.commit());
-			const firstResult = root.clone();
+			const firstResult = exampleRoot.clone();
 
-			// Supposedly empty transaction:
+			// Empty transaction:
 			patcher.apply(builder.commit());
 
-			assert.deepStrictEqual(root, firstResult);
+			// Make sure empty transaction didn't do anything:
+			assert.deepStrictEqual(exampleRoot, firstResult);
 		});
 
 		describe("#insert", () => {
@@ -103,9 +117,9 @@ describe("Transaction", () => {
 					const previousSibling = uniformly(undefined, ...otherChildren);
 					uniformly(
 						() => builder.insert(tree, previousSibling, randomInt()),
-						// () => builder.remove(child),
+						() => builder.remove(child),
 						() => builder.move(child, tree, previousSibling),
-						// () => builder.changeValue(child, randomInt())
+						() => builder.changeValue(child, randomInt())
 					);
 				} else {
 					builder.insert(tree, undefined, randomInt());
@@ -122,48 +136,50 @@ describe("Transaction", () => {
 		// The tests below are more minimal test cases meant to target specific
 		// potential problems that were found during initial development.
 		it("can apply and unapply many randomly generated transactions", () => {
-			const original = root.clone();
-			const transactions = applyRandom(root, 100);
-			const endTree = root.clone();
-			transactions.slice().reverse().forEach((transaction, i, all) => {
-				try {
-					patcher.unapply(transaction);
-				} catch (e) {
-					console.error(
-						"UNAPPLY TRANSACTION",
-						i,
-						"FAILED:",
-						transaction.map(patcher.reverse)
-					);
-					console.log('end/start tree:', endTree.toJSON());
-					console.log('current tree:', root.toJSON());
-					console.log('All applied transactions', transactions);
-					console.log('All unapplied transactions', all.slice(0, i + 1));
-					throw e;
-				}
-			});
-
-			assert.deepStrictEqual(root, original);
+			const original = exampleRoot.clone();
+			const transactions = applyRandom(exampleRoot, 1000);
+			transactions
+				.slice()
+				.reverse()
+				.forEach(transaction => patcher.unapply(transaction));
+			assert.deepStrictEqual(exampleRoot, original);
 		});
 
 		it("can apply and unapply simple insert and remove", () => {
-			const child1 = new Tree(1);
-			const child2 = new Tree(2);
-			const tree = new Tree(0, [child1, child2]);
-			const original = tree.clone();
+			const original = root.clone();
 
-			builder.insert(tree, child2, 3);
+			builder.insert(root, children[1], 3);
 			const transaction1 = builder.commit();
 			patcher.apply(transaction1);
 
-			builder.remove(child2);
+			builder.remove(children[1]);
 			const transaction2 = builder.commit();
 			patcher.apply(transaction2);
 
 			patcher.unapply(transaction2);
 			patcher.unapply(transaction1);
 
-			assert.deepStrictEqual(tree, original);
+			assert.deepStrictEqual(root, original);
+		});
+
+		it("can apply and unapply simple move and insert", () => {
+			const original = root.clone();
+
+			// Insert "4" at the end:
+			builder.insert(root, root.lastChild, 14);
+			const transaction1 = builder.commit();
+			patcher.apply(transaction1);
+
+			// Move "3" to start:
+			builder.move(root.children[2], root, undefined);
+			const transaction2 = builder.commit();
+			patcher.apply(transaction2);
+
+			// Unapply both:
+			patcher.unapply(transaction2);
+			patcher.unapply(transaction1);
+
+			assert.deepStrictEqual(root, original);
 		});
 	});
 });
