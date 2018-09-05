@@ -1,12 +1,12 @@
 import { Operation, Transaction } from "./Transaction";
-import { Serializer, TransactionableTree} from "./TransactionableTree";
+import { Serializer, TransactionableTree } from "./TransactionableTree";
 
 type StagedChange<
 	Delta,
 	Serial,
 	// This is just a shorthand, not meant to be set manually:
 	Tree extends TransactionableTree<Delta, Serial> = TransactionableTree<Delta, Serial>
-	> = Readonly<
+> = Readonly<
 	| {
 			type: "insert";
 			parent: Tree;
@@ -33,9 +33,15 @@ type StagedChange<
 export class TransactionBuilder<Delta, Serial> {
 	private staged: StagedChange<Delta, Serial>[] = [];
 
-	constructor(private readonly serializer: Serializer<Serial, TransactionableTree<Delta, Serial>>) { }
+	constructor(
+		private readonly serializer: Serializer<Serial, TransactionableTree<Delta, Serial>>
+	) {}
 
-	insert(parent: TransactionableTree<Delta, Serial>, previousSibling: TransactionableTree<Delta, Serial> | undefined, tree: TransactionableTree<Delta, Serial>): void {
+	insert(
+		parent: TransactionableTree<Delta, Serial>,
+		previousSibling: TransactionableTree<Delta, Serial> | undefined,
+		tree: TransactionableTree<Delta, Serial>
+	): void {
 		if (parent === previousSibling) {
 			throw Error("Parent and previousSibling must be distinct");
 		}

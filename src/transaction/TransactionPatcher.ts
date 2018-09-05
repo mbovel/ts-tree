@@ -5,7 +5,7 @@ export class TransactionPatcher<
 	Delta,
 	Serial,
 	Tree extends TransactionableTree<Delta, Serial> = TransactionableTree<Delta, Serial>
-	> {
+> {
 	constructor(
 		private readonly trees: Map<Id, Tree>,
 		private readonly serializer: Serializer<Serial, Tree>
@@ -20,10 +20,7 @@ export class TransactionPatcher<
 			return tree;
 		};
 
-		const positionalTrees = (
-			parent: Id,
-			previousSibling: Id | undefined
-		): [Tree, Tree?] => {
+		const positionalTrees = (parent: Id, previousSibling: Id | undefined): [Tree, Tree?] => {
 			return [getTree(parent), previousSibling ? getTree(previousSibling) : undefined];
 		};
 
@@ -93,9 +90,9 @@ export class TransactionPatcher<
 					newPreviousSibling: op.previousSibling
 				};
 			case "patch":
-				return {...op, type: "unpatch" };
+				return { ...op, type: "unpatch" };
 			case "unpatch":
-				return {...op, type: "patch" };
+				return { ...op, type: "patch" };
 		}
 	}
 }
