@@ -1,109 +1,83 @@
-export interface JSONTree<T> {
-	value: T;
-	children?: JSONTree<T>[];
-}
+export class Tree {
+	private _parent?: this;
+	private _children: this[] = [];
 
-export class Tree<T> {
-	private _parent?: Tree<T>;
-	private _children: Tree<T>[];
-
-	constructor(public value: T, children: Tree<T>[] = []) {
-		this._children = children;
-		for (const child of children) {
-			child.reparent(this);
-		}
-	}
-
-	static fromJSON<T>(json: JSONTree<T>): Tree<T> {
-		return new Tree(json.value, (json.children || []).map(Tree.fromJSON));
-	}
-
-	toJSON(): JSONTree<T> {
-		if (this._children.length > 0) {
-			return {
-				value: this.value,
-				children: this._children.map(child => child.toJSON())
-			};
-		}
-		return { value: this.value };
-	}
-
-	get children(): ReadonlyArray<Tree<T>> {
+	get children(): ReadonlyArray<this> {
 		return this._children;
 	}
 
-	get parent(): Tree<T> | undefined {
+	get parent(): this | undefined {
 		return this._parent;
 	}
 
-	get root(): Tree<T> {
+	get root(): this {
 		return this._parent ? this._parent.root : this;
 	}
 
-	get nextSibling(): Tree<T> | undefined {
+	get nextSibling(): this | undefined {
 		if (this._parent) return this._parent._children[this._parent._children.indexOf(this) + 1];
 	}
 
-	get previousSibling(): Tree<T> | undefined {
+	get previousSibling(): this | undefined {
 		if (this._parent) return this._parent._children[this._parent._children.indexOf(this) - 1];
 	}
 
-	get firstChild(): Tree<T> | undefined {
+	get firstChild(): this | undefined {
 		return this._children[0];
 	}
 
-	get lastChild(): Tree<T> | undefined {
+	get lastChild(): this | undefined {
 		return this._children[this._children.length - 1];
 	}
 
-	get previous(): Tree<T> | undefined {
+	get previous(): this | undefined {
 		const previousSibling = this.previousSibling;
 		if (previousSibling) return previousSibling.lastDescendant || previousSibling;
 		return this._parent;
 	}
 
-	get lastDescendant(): Tree<T> | undefined {
+	get lastDescendant(): this | undefined {
 		const lastChild = this.lastChild;
 		if (lastChild) return lastChild.lastDescendant || lastChild;
 	}
 
-	get next(): Tree<T> | undefined {
+	get next(): this | undefined {
 		return this.firstChild || this.nextSibling || this.parentNext;
 	}
 
-	get parentNext(): Tree<T> | undefined {
+	get parentNext(): this | undefined {
 		if (this._parent) return this._parent.nextSibling || this._parent.parentNext;
 	}
 
-	after(newTree: Tree<T>): Tree<T> | undefined {
+	after(newTree: this): this | undefined {
 		if (this._parent) return this._parent.insertAfter(this, newTree);
 	}
 
-	before(newTree: Tree<T>): Tree<T> | undefined {
+	before(newTree: this): this | undefined {
 		if (this._parent) return this._parent.insertBefore(this, newTree);
 	}
 
-	remove(): Tree<T> | undefined {
+	remove(): this | undefined {
 		if (this._parent) return this._parent.removeChild(this);
 	}
 
-	appendChild(newTree: Tree<T>): Tree<T> {
+	appendChild(newTree: this): this {
 		newTree.reparent(this);
 		this._children.push(newTree);
 		return newTree;
 	}
 
-	push(...newTrees: Tree<T>[]): number {
-		newTrees.forEach((tree: Tree<T>) => tree.reparent(this));
+	push(...newTrees: this[]): number {
+		newTrees.forEach((tree: this) => tree.reparent(this));
 		this._children.push(...newTrees);
 		return this._children.length;
 	}
 
-	insertAfter(reference: Tree<T> | undefined, newTree: Tree<T>): Tree<T> | undefined {
+	insertAfter(reference: this | undefined, newTree: this): this | undefined {
 		return this.insertBefore(reference ? reference.nextSibling : this.firstChild, newTree);
 	}
 
-	insertBefore(reference: Tree<T> | undefined, newTree: Tree<T>): Tree<T> | undefined {
+	insertBefore(reference: this | undefined, newTree: this): this | undefined {
 		if (!reference) return this.appendChild(newTree);
 		if (this._children.includes(reference)) {
 			newTree.reparent(this);
@@ -112,7 +86,7 @@ export class Tree<T> {
 		}
 	}
 
-	removeChild(child: Tree<T>): Tree<T> | undefined {
+	removeChild(child: this): this | undefined {
 		const index = this._children.indexOf(child);
 		if (index >= 0) {
 			this._children.splice(index, 1);
@@ -121,7 +95,7 @@ export class Tree<T> {
 		}
 	}
 
-	isBefore(that: Tree<T>): number {
+	isBefore(that: this): number {
 		if (this === that) return 0;
 		const thisAncestors = [...this.ancestors(), this];
 		const thatAncestors = [...that.ancestors(), that];
@@ -139,56 +113,48 @@ export class Tree<T> {
 		return thisAncestors.length < thatAncestors.length ? -1 : 1;
 	}
 
-	isChildOf(that: Tree<T>): boolean {
+	isChildOf(that: this): boolean {
 		if (this.parent === that) return true;
 		if (this.parent) return this.parent.isChildOf(that);
 		return false;
 	}
 
-	sortChildren(fn: (a: T, b: T) => number): void {
-		this._children.sort((a, b) => fn(a.value, b.value));
-	}
-
-	clone(): Tree<T> {
-		return new Tree(this.value, this._children.map(_ => _.clone()));
-	}
-
-	*childrenAfter(reference: Tree<T>): Iterable<Tree<T>> {
+	*childrenAfter(reference: this): Iterable<this> {
 		const length = this._children.length;
 		for (let i = this._children.indexOf(reference) + 1; i < length; ++i) {
 			yield this._children[i];
 		}
 	}
 
-	*childrenBefore(reference: Tree<T>): Iterable<Tree<T>> {
+	*childrenBefore(reference: this): Iterable<this> {
 		for (let i = this._children.indexOf(reference) - 1; i >= 0; --i) {
 			yield this._children[i];
 		}
 	}
 
-	*previousSiblings(): Iterable<Tree<T>> {
+	*previousSiblings(): Iterable<this> {
 		if (this._parent) yield* this._parent.childrenBefore(this);
 	}
 
-	*nextSiblings(): Iterable<Tree<T>> {
+	*nextSiblings(): Iterable<this> {
 		if (this._parent) yield* this._parent.childrenAfter(this);
 	}
 
-	*descendants(): Iterable<Tree<T>> {
+	*descendants(): Iterable<this> {
 		for (const child of this._children) {
 			yield child;
 			yield* child.descendants();
 		}
 	}
 
-	*ancestors(): Iterable<Tree<T>> {
+	*ancestors(): Iterable<this> {
 		if (this._parent) {
 			yield* this._parent.ancestors();
 			yield this._parent;
 		}
 	}
 
-	private reparent(newParent: Tree<T>) {
+	private reparent(newParent: this) {
 		this.remove();
 		this._parent = newParent;
 	}

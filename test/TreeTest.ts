@@ -1,39 +1,40 @@
 import * as assert from "assert";
 import { Tree } from "../src/Tree";
-import { exampleTrees } from "./utils";
+
+/**
+ *  0
+ *  +--1
+ *  |  +--2
+ *  |     +--3
+ *  |        +--4
+ *  +--5
+ *  +--6
+ *
+ *  7
+ *  +--8
+ *  +--9
+ */
+export function exampleTrees(): Tree[] {
+	const trees: Tree[] = Array(10);
+	trees[9] = new Tree();
+	trees[8] = new Tree();
+	trees[7] = new Tree();
+	trees[7].push(trees[8], trees[9]);
+	trees[6] = new Tree();
+	trees[5] = new Tree();
+	trees[4] = new Tree();
+	trees[3] = new Tree();
+	trees[3].push(trees[4]);
+	trees[2] = new Tree();
+	trees[2].push(trees[3]);
+	trees[1] = new Tree();
+	trees[1].push(trees[2]);
+	trees[0] = new Tree();
+	trees[0].push(trees[1], trees[5], trees[6]);
+	return trees;
+}
 
 describe("Tree", () => {
-	describe("constructor", () => {
-		it("correctly set parents", () => {
-			const trees = exampleTrees();
-			assert.strictEqual(trees[0].children.length, 3);
-			assert.strictEqual(trees[1].parent, trees[0]);
-			assert.strictEqual(trees[4].parent, trees[3]);
-		});
-
-		it("removes each element from `_children` from its previous parent", () => {
-			const trees = exampleTrees();
-			assert.doesNotThrow(() => new Tree(10, [trees[1]]));
-			assert.strictEqual(trees[0].children.length, 2);
-		});
-	});
-
-	describe(".fromJSON, #toJSON", () => {
-		it("are equivalent to .clone()", () => {
-			for (const tree of exampleTrees()) {
-				assert.deepStrictEqual(Tree.fromJSON(tree.toJSON()), tree.clone());
-			}
-		});
-	});
-
-	describe("#toJSON", () => {
-		it("does not produce a `children` field for leaves", () => {
-			const trees = exampleTrees();
-			const leaf = trees[9].toJSON();
-			assert.strictEqual(leaf.children, undefined);
-		});
-	});
-
 	describe("#root", () => {
 		it("returns itself if it is the root", () => {
 			const trees = exampleTrees();
@@ -142,9 +143,9 @@ describe("Tree", () => {
 		});
 
 		it("can move trees back and forth", () => {
+			const original = exampleTrees()[0];
 			const example = exampleTrees();
 			const root = example[0];
-			const original = root.clone();
 			const node = example[5];
 
 			root.insertAfter(undefined, node);

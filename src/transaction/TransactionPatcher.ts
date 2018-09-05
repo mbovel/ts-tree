@@ -1,26 +1,29 @@
-import { Tree } from "../Tree";
-import { Bijection } from "./Bijection";
-import { DeltaCalculator } from "./DeltaCalculator";
-import { Operation, Transaction } from "./Transaction";
+import { Id, Operation, Transaction } from "./Transaction";
+import { Serializer, TransactionableTree } from "./TransactionableTree";
 
-export class TransactionPatcher<Id, Value, Delta> {
+export class TransactionPatcher<
+	Delta,
+	Serial,
+	Tree extends TransactionableTree<Delta, Serial> = TransactionableTree<Delta, Serial>
+	> {
 	constructor(
-		private readonly deltaCalculator: DeltaCalculator<Value, Delta>,
-		private readonly bijection: Bijection<Tree<Value>, Id>,
-		private readonly generateId: () => Id
+		private readonly trees: Map<Id, Tree>,
+		private readonly serializer: Serializer<Serial, Tree>
 	) {}
 
-	apply(transaction: Transaction<Id, Value, Delta>): void {
-		const getTree = (id: Id): Tree<Value> => {
-			const tree = this.bijection.bToA.get(id);
-			if (!tree) throw Error("Tree not found in bijection");
+	apply(transaction: Transaction<Delta, Serial>): void {
+		const getTree = (id: Id): Tree => {
+			const tree = this.trees.get(id);
+			if (!tree) {
+				throw Error(`Tree ${id} could not be found in map ${[...this.trees.keys()]}`);
+			}
 			return tree;
 		};
 
 		const positionalTrees = (
 			parent: Id,
 			previousSibling: Id | undefined
-		): [Tree<Value>, Tree<Value>?] => {
+		): [Tree, Tree?] => {
 			return [getTree(parent), previousSibling ? getTree(previousSibling) : undefined];
 		};
 
@@ -31,9 +34,8 @@ export class TransactionPatcher<Id, Value, Delta> {
 						op.parent,
 						op.previousSibling
 					);
-					const tree = new Tree(op.value);
-					const id = op.restoreWithId || this.generateId();
-					this.bijection.set(tree, id);
+					const tree = this.serializer.deserialize(op.serialized);
+					this.trees.set(tree.id, tree);
 					parent.insertAfter(previousSibling, tree);
 					break;
 				}
@@ -51,37 +53,31 @@ export class TransactionPatcher<Id, Value, Delta> {
 					const node = op.previousSibling
 						? getTree(op.previousSibling).nextSibling
 						: parent.firstChild;
-					if (node && node.value === op.value) {
+					if (node) {
 						node.remove();
-						op.restoreWithId = this.bijection.aToB.get(node) || this.generateId();
-						this.bijection.deleteA(node);
-					} else if (!node) {
-						throw Error(
-							"Inconsistent transaction: cannot remove node because node doesn't exist"
-						);
+						this.trees.delete(node.id);
 					} else {
 						throw Error(
-							`Inconsistent transaction: cannot remove node because it does not have the expected value (expected ${
-								op.value
-							}, has ${node.value})`
+							"Inconsistent transaction: cannot remove node because node doesn't exist"
 						);
 					}
 					break;
 				}
-				case "change_value": {
-					const tree = getTree(op.tree);
-					tree.value = this.deltaCalculator.patch(tree.value, op.delta);
+				case "patch":
+					getTree(op.tree).apply(op.delta);
 					break;
-				}
+				case "unpatch":
+					getTree(op.tree).unapply(op.delta);
+					break;
 			}
 		}
 	}
 
-	unapply(transaction: Transaction<Id, Value, Delta>): void {
+	unapply(transaction: Transaction<Delta, Serial>): void {
 		this.apply(transaction.map(op => this.reverse(op)).reverse());
 	}
 
-	reverse(op: Operation<Id, Value, Delta>): Operation<Id, Value, Delta> {
+	reverse(op: Operation<Delta, Serial>): Operation<Delta, Serial> {
 		switch (op.type) {
 			case "insert":
 				return { ...op, type: "remove" };
@@ -96,12 +92,10 @@ export class TransactionPatcher<Id, Value, Delta> {
 					newParent: op.parent,
 					newPreviousSibling: op.previousSibling
 				};
-			case "change_value":
-				return {
-					type: "change_value",
-					tree: op.tree,
-					delta: this.deltaCalculator.reverse(op.delta)
-				};
+			case "patch":
+				return {...op, type: "unpatch" };
+			case "unpatch":
+				return {...op, type: "patch" };
 		}
 	}
 }
