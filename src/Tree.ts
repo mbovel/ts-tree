@@ -79,10 +79,9 @@ export class Tree {
 
 	insertBefore(reference: this | undefined, newTree: this): this | undefined {
 		if (!reference) return this.appendChild(newTree);
-		const index = this._children.indexOf(reference);
-		if (index >= 0) {
+		if (this._children.includes(reference)) {
 			newTree.reparent(this);
-			this._children.splice(index, 0, newTree);
+			this._children.splice(this._children.indexOf(reference), 0, newTree);
 			return newTree;
 		}
 	}
