@@ -70,7 +70,7 @@ const map: Map<Id, TestTree> = new Map();
  *  +--8
  *  +--9
  */
-export function exampleTrees(): TestTree[] {
+function exampleTrees(): TestTree[] {
 	const trees: TestTree[] = Array(10);
 	trees[9] = new TestTree(9);
 	trees[8] = new TestTree(8);

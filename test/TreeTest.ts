@@ -14,7 +14,7 @@ import { Tree } from "../src/Tree";
  *  +--8
  *  +--9
  */
-export function exampleTrees(): Tree[] {
+function exampleTrees(): Tree[] {
 	const trees: Tree[] = Array(10);
 	trees[9] = new Tree();
 	trees[8] = new Tree();
