@@ -2,7 +2,7 @@ import * as assert from "assert";
 import { Tree } from "../src/Tree";
 import { TransactionBuilder } from "../src/transaction/TransactionBuilder";
 import { TransactionPatcher } from "../src/transaction/TransactionPatcher";
-import { randomInt, uid, uniformly } from "./utils";
+import { randomInt, uniformly } from "./utils";
 import { Serializer, TransactionableTree } from "../src/transaction/TransactionableTree";
 import { Id, Transaction } from "../src/transaction/Transaction";
 
