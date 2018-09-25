@@ -68,8 +68,7 @@ export class Tree {
 	}
 
 	push(...newTrees: this[]): number {
-		newTrees.forEach((tree: this) => tree.reparent(this));
-		this._children.push(...newTrees);
+		newTrees.forEach(tree => this.appendChild(tree));
 		return this._children.length;
 	}
 
@@ -79,7 +78,7 @@ export class Tree {
 
 	insertBefore(reference: this | undefined, newTree: this): this | undefined {
 		if (!reference) return this.appendChild(newTree);
-		if (this._children.includes(reference)) {
+		if (this.hasChild(reference)) {
 			newTree.reparent(this);
 			this._children.splice(this._children.indexOf(reference), 0, newTree);
 			return newTree;
@@ -117,6 +116,10 @@ export class Tree {
 		if (this.parent === that) return true;
 		if (this.parent) return this.parent.isChildOf(that);
 		return false;
+	}
+
+	hasChild(reference: this): boolean {
+		return this._children.includes(reference);
 	}
 
 	*childrenAfter(reference: this): Iterable<this> {
